@@ -21,7 +21,7 @@ class PoP:
             total_allocated += server.allocated_cpu
         return total_allocated
 
-    def add_vnf(self, vnf):
+    def place_vnf(self, vnf):
         self.vnfs.append(vnf)
         allocated = False
         for server in self.servers:

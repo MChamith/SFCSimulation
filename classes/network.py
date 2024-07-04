@@ -32,7 +32,7 @@ class Network:
         self.generate()
 
     def add_edge(self, pop1, pop2, **link):
-        link['available_resources'] = 100 - link['allocated_resources']
+        link['available_bandwidth'] = 100 - link['allocated_bandwidth']
         self.network_graph.add_edge(pop1, pop2, **link)
 
     def show_nodes(self):
