@@ -15,13 +15,13 @@ class PopTopology:
 
     def initialize_network(self):
 
-        pop0 = PoP('PoP0', coordinates=[2, 2])
-        pop1 = PoP('PoP1', coordinates=[1, 1])
-        pop2 = PoP('PoP2', coordinates=[1, 3])
-        pop3 = PoP('PoP3', coordinates=[3, 3])
-        pop4 = PoP('PoP4', coordinates=[3, 1])
+        pop0 = PoP('PoP0', coordinates=[1, 1])
+        pop1 = PoP('PoP1', coordinates=[0, 0])
+        pop2 = PoP('PoP2', coordinates=[0, 2])
+        pop3 = PoP('PoP3', coordinates=[2, 2])
+        pop4 = PoP('PoP4', coordinates=[2, 0])
 
-        vnf_types = ['type1', 'type2', 'type3', 'type4']
+
         self.pops = [pop0, pop1, pop2, pop3, pop4]
 
         for pop in self.pops:
@@ -61,19 +61,39 @@ class PopTopology:
 
         return np.array(edge_bandwidths)
 
+    def place_vlinks(self, sfc, placements):
+        l_success = True
+        act_path = 0
+        for i in range(len(placements) - 1):
+            curr_plc = placements[i]
+            next_plc = placements[i+1]
+            bandwidth_req = sfc.get_vnf(i).get_bandwidth()
+            l_success, pth_len = self.network.add_vlink(curr_plc, next_plc, bandwidth_req)
+            act_path += pth_len
+            if not l_success:
+                return l_success, None
+        return l_success, act_path
 
-topology = PopTopology()
-network = topology.reset_network()
+    def calculate_opt_path(self, pop1, pop2):
+        opt_path = self.network.calculate_opt_path(pop1, pop2)
+        return opt_path
 
-coords = topology.get_all_pop_coordinates()
-print('coords ' + str(coords))
 
-cpus = topology.get_all_pop_cpus()
-print('cpus ' + str(cpus))
 
-bdws = topology.get_edge_bandwidths()
-print('bandwiodths ' + str(bdws))
-# sfc = SFC(pop1, pop4)
+#
+#
+# topology = PopTopology()
+# network = topology.reset_network()
+#
+# coords = topology.get_all_pop_coordinates()
+# print('coords ' + str(coords))
+#
+# cpus = topology.get_all_pop_cpus()
+# print('cpus ' + str(cpus))
+#
+# bdws = topology.get_edge_bandwidths()
+# print('bandwiodths ' + str(bdws))
+# # sfc = SFC(pop1, pop4)
 #
 # sfc.add_vnf('source', 0, random.randint(1, 5))
 # for i in range(5):

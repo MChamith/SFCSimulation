@@ -3,10 +3,11 @@ from classes.VNF import VNF
 
 class SFC:
 
-    def __init__(self):
-
+    def __init__(self, src_loc, dst_loc):
         self.vnfs = []
         self.vnf_order = 0
+        self.src_loc = src_loc
+        self.dst_loc = dst_loc
 
     def add_vnf(self, vnf_type, cpu_demand, bandwidth_demand):
         vnf = VNF(vnf_type, cpu_demand, bandwidth_demand, self.vnf_order)
@@ -14,10 +15,10 @@ class SFC:
         self.vnf_order += 1
 
     def get_source(self):
-        return self.vnfs[0]
+        return self.src_loc
 
     def get_destination(self):
-        return self.vnfs[-1]
+        return self.dst_loc
 
     def get_sfc_length(self):
         return len(self.vnfs)

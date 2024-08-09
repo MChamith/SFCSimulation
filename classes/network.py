@@ -50,9 +50,9 @@ class Network:
                                                                 {'available_bandwidth': new_available_bdw,
                                                                  'allocated_bandwidth': 100 - new_available_bdw}})
             else:
-                return False
+                return False, None
 
-        return True
+        return True, len(shortest_pth)
 
     def show_nodes(self):
         print('*****     there are', len(self.network_graph.nodes), 'node in network     *****')
@@ -80,3 +80,13 @@ class Network:
     def get_pop_by_action(self, action):
         # TODO check if pop to action is correctly mapped if not access pop through network_graph
         return self.pop_list[action]
+
+    def get_pop_by_coordinates(self, coords):
+        for pop in self.pop_list:
+            if pop.coorinates == coords:
+                return pop
+        return None
+
+    def calculate_opt_path(self, pop1, pop2):
+        shortest_pth = nx.shortest_path(self.network_graph, pop1, pop2)
+        return len(shortest_pth)
