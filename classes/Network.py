@@ -39,7 +39,7 @@ class Network:
     def add_vlink(self, pop1, pop2, required_bdw):
 
         shortest_pth = nx.shortest_path(self.network_graph, pop1, pop2)
-
+        # print('shortest path ' + str(shortest_pth))
         for i in range(len(shortest_pth) - 1):
 
             available_bdw = self.network_graph.get_edge_data(shortest_pth[i], shortest_pth[i + 1])[
@@ -52,7 +52,7 @@ class Network:
             else:
                 return False, None
 
-        return True, len(shortest_pth)
+        return True, len(shortest_pth) - 1
 
     def show_nodes(self):
         print('*****     there are', len(self.network_graph.nodes), 'node in network     *****')
@@ -89,4 +89,4 @@ class Network:
 
     def calculate_opt_path(self, pop1, pop2):
         shortest_pth = nx.shortest_path(self.network_graph, pop1, pop2)
-        return len(shortest_pth)
+        return len(shortest_pth) -1

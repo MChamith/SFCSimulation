@@ -4,7 +4,7 @@ from classes.PoP import PoP
 from classes.SFC import SFC
 from classes.Server import Server
 from classes.VNF import VNF
-from classes.network import Network
+from classes.Network import Network
 import numpy as np
 
 
@@ -15,9 +15,9 @@ class PopTopology:
 
     def initialize_network(self):
 
-        pop0 = PoP('PoP0', coordinates=[1, 1])
-        pop1 = PoP('PoP1', coordinates=[0, 0])
-        pop2 = PoP('PoP2', coordinates=[0, 2])
+        pop0 = PoP('PoP0', coordinates=[0, 0])
+        pop1 = PoP('PoP1', coordinates=[0, 2])
+        pop2 = PoP('PoP2', coordinates=[1, 1])
         pop3 = PoP('PoP3', coordinates=[2, 2])
         pop4 = PoP('PoP4', coordinates=[2, 0])
 
@@ -35,8 +35,9 @@ class PopTopology:
         self.network = Network(self.pops)
         self.network.add_edge(pop0, pop1, **{'allocated_bandwidth': random.randint(70, 90)})
         self.network.add_edge(pop0, pop2, **{'allocated_bandwidth': random.randint(70, 90)})
-        self.network.add_edge(pop0, pop3, **{'allocated_bandwidth': random.randint(70, 90)})
-        self.network.add_edge(pop0, pop4, **{'allocated_bandwidth': random.randint(70, 90)})
+        self.network.add_edge(pop2, pop1, **{'allocated_bandwidth': random.randint(70, 90)})
+        self.network.add_edge(pop1, pop3, **{'allocated_bandwidth': random.randint(70, 90)})
+        self.network.add_edge(pop2, pop4, **{'allocated_bandwidth': random.randint(70, 90)})
 
         return self.network
 
@@ -69,9 +70,11 @@ class PopTopology:
             next_plc = placements[i+1]
             bandwidth_req = sfc.get_vnf(i).get_bandwidth()
             l_success, pth_len = self.network.add_vlink(curr_plc, next_plc, bandwidth_req)
-            act_path += pth_len
+
             if not l_success:
                 return l_success, None
+            else:
+                act_path += pth_len
         return l_success, act_path
 
     def calculate_opt_path(self, pop1, pop2):

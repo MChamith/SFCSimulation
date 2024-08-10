@@ -26,7 +26,7 @@ class PoP:
         return total_allocated
 
     def place_vnf(self, vnf):
-        print('available before allocation ' + str(self.get_total_available_resources()))
+        # print('available before allocation ' + str(self.get_total_available_resources()))
         self.vnfs.append(vnf)
         allocated = False
         for server in self.servers:
@@ -36,10 +36,10 @@ class PoP:
                 allocated = True
                 break
 
-        if allocated:
-            print('VNF added in PoP' + str(self.id))
-        else:
+        if not allocated:
             print('Not enough CPU to allocate in PoP ' + str(self.id))
+
+
         # print('after allocation ' + str(self.get_total_available_resources()))
         return allocated
 
