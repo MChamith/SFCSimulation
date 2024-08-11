@@ -21,7 +21,6 @@ class PopTopology:
         pop3 = PoP('PoP3', coordinates=[2, 2])
         pop4 = PoP('PoP4', coordinates=[2, 0])
 
-
         self.pops = [pop0, pop1, pop2, pop3, pop4]
 
         for pop in self.pops:
@@ -67,7 +66,7 @@ class PopTopology:
         act_path = 0
         for i in range(len(placements) - 1):
             curr_plc = placements[i]
-            next_plc = placements[i+1]
+            next_plc = placements[i + 1]
             bandwidth_req = sfc.get_vnf(i).get_bandwidth()
             l_success, pth_len = self.network.add_vlink(curr_plc, next_plc, bandwidth_req)
 
@@ -81,52 +80,15 @@ class PopTopology:
         opt_path = self.network.calculate_opt_path(pop1, pop2)
         return opt_path
 
+    def get_neighbours_state_by_id(self, pop):
+        neighbour_pops = self.network.network_graph.neighbors(pop)
+        n_pop_resources = []
+        for n_pop in neighbour_pops:
+            n_pop_resources.append(n_pop.get_total_available_resources())
+        return n_pop_resources
 
 
-#
-#
-# topology = PopTopology()
-# network = topology.reset_network()
-#
-# coords = topology.get_all_pop_coordinates()
-# print('coords ' + str(coords))
-#
-# cpus = topology.get_all_pop_cpus()
-# print('cpus ' + str(cpus))
-#
-# bdws = topology.get_edge_bandwidths()
-# print('bandwiodths ' + str(bdws))
-# # sfc = SFC(pop1, pop4)
-#
-# sfc.add_vnf('source', 0, random.randint(1, 5))
-# for i in range(5):
-#     cpu_demand = random.randint(5, 20)
-#     bandwidth_demand = random.randint(1, 5)
-#     vnf_type = vnf_types[random.randint(0, 3)]
-#     sfc.add_vnf(vnf_type, cpu_demand, bandwidth_demand)
-#
-# sfc.add_vnf('destination', 0, random.randint(1, 5))
-#
-# # sfc.show_sfc()
-#
-# sfc_length = sfc.get_sfc_length()
-# placements = []
-# for i in range(sfc_length):
-#     curr_vnf = sfc.get_current_vnf(i)
-#     rand_pop_id = random.randint(0, 4)
-#     placements.append(rand_pop_id)
-#     curr_pop = pops[rand_pop_id]
-#     curr_pop.place_vnf(curr_vnf)
-#
-# # print(placements)
-# print('before vlink allocation')
-# network.show()
-# for i in range(len(placements) - 1):
-#     curr_plc = pops[placements[i]]
-#     next_plc = pops[placements[i + 1]]
-#     bandwidth_req = sfc.get_current_vnf(i).get_bandwidth()
-#     network.add_vlink(curr_plc, next_plc, bandwidth_req)
-#
-# print('after vlink allocation')
-#
-# network.show()
+topology = PopTopology()
+network = topology.initialize_network()
+
+topology.get_neighbours_state(topology.pops[2])

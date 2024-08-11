@@ -1,3 +1,5 @@
+from network_substrate import PopTopology
+from classes.MARLAgent import Agent
 class PoP:
 
     def __init__(self, id, coordinates):
@@ -5,6 +7,7 @@ class PoP:
         self.servers = []
         self.coorinates = coordinates
         self.vnfs = []
+        self.agent = None
 
     def add_server(self, server):
         self.servers.append(server)
@@ -48,6 +51,12 @@ class PoP:
 
     def get_coordinate(self):
         return self.coorinates
+
+    def initialize_agent(self, topology, n_actions):
+        self.agent = Agent(topology, n_actions)
+
+
+
 
     # def search_pop(self, uuid):
     #     for i in range(self.number):
