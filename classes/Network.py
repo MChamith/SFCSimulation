@@ -90,3 +90,11 @@ class Network:
     def calculate_opt_path(self, pop1, pop2):
         shortest_pth = nx.shortest_path(self.network_graph, pop1, pop2)
         return len(shortest_pth) -1
+
+    def is_in_shortest_path(self, pop, src, dst):
+        shortest_pth = nx.shortest_path(self.network_graph, src, dst)
+        if pop in shortest_pth:
+            return True
+        else:
+            return False
+

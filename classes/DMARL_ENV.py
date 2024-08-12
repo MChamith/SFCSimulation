@@ -5,13 +5,12 @@ from network_substrate import PopTopology
 import numpy as np
 
 
-class DdqlEnv(Env):
+class DmarlEnv(Env):
 
-    def __init__(self, pop_n, edge_n, coord_range, sfc_dataset):
-        super(DdqlEnv, self).__init__()
+    def __init__(self, pop_n, server_n, coord_range, n_action, sfc_dataset):
+        super(DmarlEnv, self).__init__()
 
         self.pop_n = pop_n  # Number of Pops or number of actions in action space
-        self.edge_n = edge_n
         self.coord_range = coord_range
         self.sfc_dataset = sfc_dataset
         self.curr_sfc_no = 0
@@ -20,9 +19,11 @@ class DdqlEnv(Env):
         self.curr_sfc = None
         self.vnf_order = 0
         self.placements = []
+        self.server_n = server_n
+        self.n_action = n_action
 
         self.observation_space = spaces.Dict({
-            'sfc_length': spaces.Discrete(5),  # set to max sfc length with src dst included
+            'sfc_length': spaces.Discrete(5),  # set to max sfc length with src dst not included
             'src_loc': spaces.Box(low=0, high=self.coord_range, shape=(2,), dtype=np.int8),
             'dst_loc': spaces.Box(low=0, high=self.coord_range, shape=(2,), dtype=np.int8),
             # VNF state: dR(i), dR(i-, i), dR(i, i+), i.order
@@ -30,20 +31,20 @@ class DdqlEnv(Env):
             'ingress_bw': spaces.Box(low=0, high=100, shape=(1,)),
             'egress_bw': spaces.Box(low=0, high=100, shape=(1,)),
             'order': spaces.Discrete(5),  # set to max sfc length with src dst included
-            # Substrate state: u.loc, dS,t(u), dS,t(u, v)
-            'pop_locations': spaces.Box(low=0, high=self.coord_range, shape=(self.pop_n, 2), dtype=np.int8),
-            'pop_cpu': spaces.Box(low=0, high=100, shape=(self.pop_n,)),
-            'link_bw': spaces.Box(low=0, high=100, shape=(self.edge_n,)),
+            # # Substrate state: u.loc, dS,t(u), dS,t(u, v)
+            # 'pop_location': spaces.Discrete(self.pop_n),
+            # 'server_cpu': spaces.Box(low=0, high=100, shape=(self.server_n,)),
+            # 'link_bw': spaces.Box(low=0, high=100, shape=(self.edge_n,)),
         })
 
-        self.action_space = spaces.Discrete(self.pop_n)
+        self.action_space = spaces.Discrete(self.n_action)
 
     def step(self, action):
 
         done = False
         PoP = self.physical_network.get_pop_by_action(action)
         vnf = self.curr_sfc.get_vnf(self.vnf_order)
-        n_success = PoP.place_vnf(vnf)
+        n_success = PoP.place_vnf(vnf, self.vnf_order)
         self.placements.insert(self.vnf_order, PoP)
         # TODO check below maps correctly
         # print('vnf order ' + str(self.vnf_order))
@@ -81,12 +82,12 @@ class DdqlEnv(Env):
 
         sourcPoP = self.physical_network.get_pop_by_coordinates(self.curr_sfc.get_source())
         source_vnf = self.curr_sfc.get_vnf(0)
-        sourcPoP.place_vnf(source_vnf)
+        sourcPoP.place_vnf(source_vnf, 0)
         self.placements.append(sourcPoP)
 
         destPoP = self.physical_network.get_pop_by_coordinates(self.curr_sfc.get_destination())
         dest_vnf = self.curr_sfc.get_vnf(self.sfc_length - 1)
-        destPoP.place_vnf(dest_vnf)
+        destPoP.place_vnf(dest_vnf, self.sfc_length - 1)
         self.placements.append(destPoP)
 
         self.state = self.get_curr_state()

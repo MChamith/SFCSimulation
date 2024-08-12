@@ -1,14 +1,5 @@
 from classes.SFC import SFC
 import random
-from DDQL_ENV import DdqlEnv
-import gymnasium as gym
-import torch
-import numpy as np
-from torch import nn
-import random
-import torch.nn.functional as F
-import collections
-from torch.optim.lr_scheduler import StepLR
 
 
 def create_dataset(sfc_length):

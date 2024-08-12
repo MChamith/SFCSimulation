@@ -80,15 +80,101 @@ class PopTopology:
         opt_path = self.network.calculate_opt_path(pop1, pop2)
         return opt_path
 
-    def get_neighbours_state_by_id(self, pop):
-        neighbour_pops = self.network.network_graph.neighbors(pop)
-        n_pop_resources = []
-        for n_pop in neighbour_pops:
-            n_pop_resources.append(n_pop.get_total_available_resources())
-        return n_pop_resources
+    def get_pop_by_id(self, pop_id):
+        for pop in self.pops:
+            if pop.get_id() == pop_id:
+                return pop
+        return None
 
+    def is_pop_exisit(self, pop):
+        return self.network.network_graph.has_node(pop)
+
+    def get_neighbours_state(self, pop_id):
+        pop = self.get_pop_by_id(pop_id)
+
+        if pop is not None:
+            neighbour_pops = self.network.network_graph.neighbors(pop)
+            n_pop_resources = []
+            n_pop_locs = []
+            for n_pop in neighbour_pops:
+                n_pop_resources.append(n_pop.get_total_available_resources())
+                n_pop_locs.append(n_pop.get_coordinate())
+            return n_pop_locs, n_pop_resources
+        else:
+            return None
+
+    def get_flag_data(self, pop_id, vnf_order, src, dst):
+        hosts_another = 0
+        hosts_previous = 0
+        in_shortest_path = 0
+
+        pop = self.get_pop_by_id(pop_id)
+
+        if pop is not None:
+            if len(pop.vnfs) > 0:
+                hosts_another = 1
+
+            if pop.get_latest_vnf() == vnf_order:
+                hosts_previous = 1
+
+            if self.is_pop_exisit(src) and self.is_pop_exisit(dst) and self.network.is_in_shortest_path(pop, src, dst):
+                in_shortest_path = 1
+
+        return [hosts_another, hosts_previous, in_shortest_path]
+
+    def get_server_cpu(self, pop_id):
+        pop = self.get_pop_by_id(pop_id)
+
+        if pop is not None:
+            server_cpus = pop.get_local_cpus()
+            return server_cpus
+        else:
+            return None
+
+    def get_pop_coordinates(self, pop_id):
+        pop = self.get_pop_by_id(pop_id)
+        if pop is not None:
+            return pop.get_coordinate()
+        else:
+            return None
+
+    def get_neighbours_edges(self, pop_id):
+        pop = self.get_pop_by_id(pop_id)
+        neighbour_bdw = []
+        if pop is not None:
+            neighbour_pops = self.network.network_graph.neighbors(pop)
+            for n_pop in neighbour_pops:
+                available_bdw = self.network.network_graph.get_edge_data(pop, n_pop)[
+                    'available_bandwidth']
+                neighbour_bdw.append(available_bdw)
+
+            return neighbour_bdw
+        else:
+            return None
+
+    def get_number_of_servers(self, pop_id):
+        pop = self.get_pop_by_id(pop_id)
+        if pop is not None:
+            num_server = pop.get_number_of_servers()
+            return num_server
+        else:
+            return None
+
+    def get_number_of_neighbours(self, pop_id):
+        pop = self.get_pop_by_id(pop_id)
+        if pop is not None:
+            neighbour_pops = self.network.network_graph.neighbors(pop)
+            return len(list(neighbour_pops))
+        else:
+            return None
+
+
+
+#
 
 topology = PopTopology()
 network = topology.initialize_network()
 
-topology.get_neighbours_state(topology.pops[2])
+nebrs = topology.get_neighbours_state('PoP2')
+# flattened_locs = [item for sublist in nebrs[0] for item in sublist]
+# print(flattened_locs)
