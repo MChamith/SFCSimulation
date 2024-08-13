@@ -17,7 +17,7 @@ from create_sfc_dataset import create_dataset
 import matplotlib.pyplot as plt
 
 
-def main(gamma=0.99, lr=0.00025, min_episodes=20, eps=1, eps_decay=0.9998, eps_min=0.01, update_step=20,
+def main(gamma=0.99, lr=0.000025, min_episodes=20, eps=1, eps_decay=0.9998, eps_min=0.0001, update_step=20,
          batch_size=64, update_repeats=50,
          num_episodes=10000, seed=42, max_memory_size=10000, lr_gamma=1, lr_step=100, measure_step=100,
          measure_repeats=100, hidden_dim=64, horizon=np.inf, render=True, render_step=50, n_actions=3):
@@ -81,21 +81,13 @@ def main(gamma=0.99, lr=0.00025, min_episodes=20, eps=1, eps_decay=0.9998, eps_m
     performance = []
     i = 0
     scores = []
-
+    optimal_count = 0
+    optimal_percent = []
     for episode in range(num_episodes):
-        # display the performance
-        # if (episode % measure_step == 0) and episode >= min_episodes:
-        #     performance.append([episode, evaluate(Q_1, env, measure_repeats)])
-        #     print("Episode: ", episode)
-        #     print("rewards: ", performance[-1][1])
-        #     print("lr: ", scheduler.get_last_lr()[0])
-        #     print("eps: ", eps)
 
         state = env.reset()
         for agent in marl_agents:
             agent.add_state(state, eps)
-        # p_state = parse_state(state)
-        # memory.state.append(p_state)
 
         done = False
 
@@ -109,38 +101,40 @@ def main(gamma=0.99, lr=0.00025, min_episodes=20, eps=1, eps_decay=0.9998, eps_m
 
             firm_action = soft_actions.index(max(soft_actions))
 
-            state, reward, done, _ = env.step(firm_action)
+            state, reward, done, is_optimal,  _ = env.step(firm_action)
             score += reward
 
             s_i = 0
             for agent in marl_agents:
-                agent.update_memory(state, eps, soft_actions[i], reward, done)
+                agent.update_memory(state, eps, soft_actions[s_i], reward, done)
                 s_i += 1
-            # memory.update(p_state, action, reward, done)
 
-            # if episode >= min_episodes and episode % update_step == 0:
-            #     for _ in range(update_repeats):
             if i > 64:
                 for agent in marl_agents:
                     agent.train(batch_size, gamma)
-                # train(batch_size, Q_1, Q_2, optimizer, memory, gamma)
 
-                # transfer new parameter from Q_1 to Q_2
                 if episode % update_step == 0:
                     for agent in marl_agents:
                         agent.update_parameters()
 
-                # update learning rate and eps
                 # scheduler.step()
                 eps = max(eps * eps_decay, eps_min)
         print('episode ' + str(episode) + ' curr sfc ' + str(env.curr_sfc_no) + 'epsilon ' + str(eps) + ' score ' + str(
             score))
-
+        if is_optimal:
+            optimal_count += 1
+        optimal_percent.append(optimal_count / (episode + 1))
         scores.append(score)
         # average_scores = 0
 
     x_sma = np.arange(100 - 1, len(scores))
     mov_avg = np.convolve(scores, np.ones(100) / 100, mode='valid')
+
+    with open('marl_scores.txt', 'w') as fw:
+        fw.write(str(scores))
+    with open('optimal_percent_marl.txt', 'w') as fw:
+        fw.write(str(optimal_percent))
+
     plt.plot(x_sma, mov_avg)
     plt.show()
 

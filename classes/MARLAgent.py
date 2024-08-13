@@ -15,7 +15,7 @@ class Agent:
         self.pop_id = pop_id
         self.Q1 = None
         self.Q2 = None
-        self.memory  = Memory(max_memory_size)
+        self.memory = Memory(max_memory_size)
         self.optimizer = None
 
     # might be able optimize both get functions by initially getting all the neighbours and storing the neighbours.
@@ -24,9 +24,10 @@ class Agent:
         # input size of q network is determined by number of neighbours  (check observation space in paper)
         num_server = self.topology.get_number_of_servers(self.pop_id)
         num_neigbours = self.topology.get_number_of_neighbours(self.pop_id)
-        input_size = 14 + num_server + 4 * num_neigbours
-        self.Q1 = MARL_QNetwork(input_size, self.n_actions)
-        self.Q2 = MARL_QNetwork(input_size, self.n_actions)
+        input_size = 15 + num_server + 4 * num_neigbours
+        # print('input size ' + str(input_size))
+        self.Q1 = MARL_QNetwork(input_size, self.n_actions).to(device)
+        self.Q2 = MARL_QNetwork(input_size, self.n_actions).to(device)
         self.update_parameters()
         for param in self.Q2.parameters():
             param.requires_grad = False
@@ -52,6 +53,7 @@ class Agent:
     def parse_state(self, state, eps):
         # print('state to parse ' + str(state))
         # Flatten the dictionary values into a single list
+
         flattened_state = list(chain.from_iterable(
             value.flatten() if isinstance(value, np.ndarray) else (value if isinstance(value, list) else [value])
             for value in state.values()
@@ -60,15 +62,16 @@ class Agent:
         src = state['src_loc']
         dst = state['dst_loc']
         # TODO check if below is correct
-        vnf_order = state['order'] - 1
+        vnf_order_prev = state['order'] - 1
         local_cpu = self.get_local_state()
         local_loc = self.topology.get_pop_coordinates(self.pop_id)
         n_edges = self.get_neighbour_bandwidths()
         nbr_data = self.get_neighbour_state()
-        flag_data = self.get_flag_data(vnf_order, src, dst)
+        nbr_data = [item for sublist in nbr_data for item in sublist]
+        flag_data = self.get_flag_data(vnf_order_prev, src, dst)
         # print(flattened_values)
-        state_array = np.array([flattened_state, nbr_data, flag_data, eps])
-
+        state_array = np.hstack([flattened_state, local_loc,local_cpu, n_edges,  flag_data,nbr_data, eps]).ravel()
+        # print('state array shape ' + str(state_array.shape))
         return state_array
 
     def select_action(self, env, state, eps):

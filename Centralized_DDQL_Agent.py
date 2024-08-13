@@ -2,7 +2,7 @@ from itertools import chain
 
 from classes.SFC import SFC
 import random
-from DDQL_ENV import DdqlEnv
+from classes.DDQL_ENV import DdqlEnv
 import gymnasium as gym
 import torch
 import numpy as np
@@ -95,7 +95,7 @@ def update_parameters(current_model, target_model):
     target_model.load_state_dict(current_model.state_dict())
 
 
-def main(gamma=0.99, lr=0.00025, min_episodes=20, eps=1, eps_decay=0.9998, eps_min=0.01, update_step=20,
+def main(gamma=0.99, lr=0.000025, min_episodes=20, eps=1, eps_decay=0.9998, eps_min=0.001, update_step=20,
          batch_size=64, update_repeats=50,
          num_episodes=10000, seed=42, max_memory_size=10000, lr_gamma=1, lr_step=100, measure_step=100,
          measure_repeats=100, hidden_dim=64, horizon=np.inf, render=True, render_step=50):
@@ -150,7 +150,8 @@ def main(gamma=0.99, lr=0.00025, min_episodes=20, eps=1, eps_decay=0.9998, eps_m
     performance = []
     i = 0
     scores = []
-
+    optimal_count = 0
+    optimal_percent = []
     for episode in range(num_episodes):
         # display the performance
         # if (episode % measure_step == 0) and episode >= min_episodes:
@@ -170,8 +171,9 @@ def main(gamma=0.99, lr=0.00025, min_episodes=20, eps=1, eps_decay=0.9998, eps_m
         while not done:
             i += 1
             action = select_action(Q_2, env, state, eps)
-            state, reward, done, _ = env.step(action)
+            state, reward, done, is_optimal, _ = env.step(action)
             score += reward
+
             # save state, action, reward sequence
             p_state = parse_state(state)
             memory.update(p_state, action, reward, done)
@@ -190,14 +192,25 @@ def main(gamma=0.99, lr=0.00025, min_episodes=20, eps=1, eps_decay=0.9998, eps_m
                 eps = max(eps * eps_decay, eps_min)
         print('episode ' + str(episode) + ' curr sfc ' + str(env.curr_sfc_no) + 'epsilon ' + str(eps) + ' score ' + str(
             score))
-
+        if is_optimal:
+            optimal_count += 1
+        optimal_percent.append(optimal_count / (episode + 1))
         scores.append(score)
         # average_scores = 0
+    mov_avg = np.convolve(scores, np.ones(100) / 100, mode='valid')
+
+    with open('central_scores.txt', 'w') as fw:
+        fw.write(str(scores))
+    with open('optimal_percent_central.txt', 'w') as fw:
+        fw.write(str(optimal_percent))
 
     x_sma = np.arange(100 - 1, len(scores))
-    mov_avg = np.convolve(scores, np.ones(100) / 100, mode='valid')
+    # x_opt = np.arange(100, len(optimal_percent))
+
     plt.plot(x_sma, mov_avg)
+    # plt.plot(x_opt, optimal_percent)
     plt.show()
+
     return Q_1, performance
 
 

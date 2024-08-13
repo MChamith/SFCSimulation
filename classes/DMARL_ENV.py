@@ -50,6 +50,7 @@ class DmarlEnv(Env):
         # print('vnf order ' + str(self.vnf_order))
         # print('terminal ' + str(self.sfc_length - 2))
         is_vnf_terminal = self.vnf_order == self.sfc_length - 2
+        is_optimal = False
         if n_success and is_vnf_terminal:
             l_success, act_path = self.pop_topology.place_vlinks(self.curr_sfc, self.placements)
             if l_success:
@@ -57,7 +58,8 @@ class DmarlEnv(Env):
                 # TODO check the path length in edge case when vnf in single pop. src = dst
                 reward = 10 * ((opt_path + 1) / (act_path + 1))
                 print('success act path ' + str(act_path) + ' opt path ' + str(opt_path))
-
+                if opt_path == act_path:
+                    is_optimal = True
             else:
                 reward = -10
             done = True
@@ -70,7 +72,7 @@ class DmarlEnv(Env):
             reward = -10
             done = True
 
-        return self.state, reward, done, {}
+        return self.state, reward, done, is_optimal, {}
 
     def reset(self):
 
@@ -109,9 +111,9 @@ class DmarlEnv(Env):
             'ingress_bw': prev_vnf.get_bandwidth(),
             'egress_bw': curr_vnf.get_bandwidth(),
             'order': self.vnf_order,
-            'pop_locations': self.pop_topology.get_all_pop_coordinates(),
-            'pop_cpu': self.pop_topology.get_all_pop_cpus(),
-            'link_bw': self.pop_topology.get_edge_bandwidths(),
+            # 'pop_locations': self.pop_topology.get_all_pop_coordinates(),
+            # 'pop_cpu': self.pop_topology.get_all_pop_cpus(),
+            # 'link_bw': self.pop_topology.get_edge_bandwidths(),
         }
 
         return self.state
